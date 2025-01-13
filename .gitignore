@@ -1,0 +1,8 @@
+logs
+run.sh
+main.ipynb
+src/storage/
+
+spot-2.9/
+
+**/__pycache__
