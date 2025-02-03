@@ -15,7 +15,7 @@ from envs import *
 from ltl_wrappers import LTLEnv
 
 def _t5_preprocess_texts(texts, tokenizer, device=None):
-    return tokenizer(texts, return_tensors="pt", padding=True).input_ids
+    return tokenizer(texts, return_tensors="pt", padding=True).input_ids.to(device)
 
 def get_obss_preprocessor(env, gnn, progression_mode):
     obs_space = env.observation_space

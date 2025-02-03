@@ -166,7 +166,7 @@ class AdversarialEnvSampler(LTLSampler):
         else:
             return ('eventually', ('and', 'a', ('eventually', 'c')))
         
-with open("/home/chinostroza/Lang2LTL/data/train_formulas.txt", "r") as f:
+with open("/workspace1/cahinostroza/LTL2Action/data/train_formulas.txt", "r") as f:
     formulas = f.readlines()
     formulas = [f.strip() for f in formulas]
 
@@ -207,7 +207,7 @@ class Lang2LTLSampler(LTLSampler):
 class Lang2LTLTextSampler(LTLSampler):
     def __init__(self, propositions):
         super().__init__(propositions)
-        with open("/home/chinostroza/Lang2LTL/data/baseline_train.txt", "r") as f:
+        with open("/workspace1/cahinostroza/LTL2Action/data/baseline_train.txt", "r") as f:
             data = f.readlines()
             self.data = [d.strip() for d in data]
 
@@ -219,7 +219,7 @@ class TestLang2LTLSampler(LTLSampler):
     def __init__(self, propositions):
         super().__init__(propositions)
         self.count = 0
-        with open("/home/chinostroza/Lang2LTL/data/val_formulas.txt", "r") as f:
+        with open("/workspace1/cahinostroza/LTL2Action/data/val_formulas.txt", "r") as f:
             formulas = f.readlines()
             self.formulas = [f.strip() for f in formulas]
 
@@ -227,6 +227,23 @@ class TestLang2LTLSampler(LTLSampler):
         print(self.count, len(self.formulas))
         f, real_f = self.formulas[self.count].split(" - ")
         f = transform(formula(f))
+        real_f = transform(formula(real_f))
+        self.count += 1
+        if self.count >= len(self.formulas):
+            self.count = 0
+        return f, real_f
+    
+class TestLang2LTLTextSampler(LTLSampler):
+    def __init__(self, propositions):
+        super().__init__(propositions)
+        self.count = 0
+        with open("/workspace1/cahinostroza/LTL2Action/data/val_instructions.txt", "r") as f:
+            formulas = f.readlines()
+            self.formulas = [f.strip() for f in formulas]
+
+    def sample(self):
+        print(self.count, len(self.formulas))
+        f, real_f = self.formulas[self.count].split(" - ")
         real_f = transform(formula(real_f))
         self.count += 1
         if self.count >= len(self.formulas):
@@ -268,6 +285,8 @@ def getLTLSampler(sampler_id, propositions):
         return TestLang2LTLSampler(propositions)
     elif (tokens[0] == "Lang2LTLText"):
         return Lang2LTLTextSampler(propositions)
+    elif (tokens[0] == "TestLang2LTLText"):
+        return TestLang2LTLTextSampler(propositions)
     else: # "Default"
         return DefaultSampler(propositions)
 

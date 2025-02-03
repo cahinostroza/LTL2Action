@@ -1,8 +1,9 @@
 logs
-run.sh
 main.ipynb
 src/storage/
 
 spot-2.9/
 
 **/__pycache__
+*data*
+*.sh
