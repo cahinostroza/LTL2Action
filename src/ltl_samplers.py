@@ -8,6 +8,9 @@ given template(s).
 
 import random
 from spot import formula
+import os 
+
+DATA_PATH = os.environ.get('DATA_PATH')
 
 class LTLSampler():
     def __init__(self, propositions):
@@ -166,7 +169,7 @@ class AdversarialEnvSampler(LTLSampler):
         else:
             return ('eventually', ('and', 'a', ('eventually', 'c')))
         
-with open("/workspace1/cahinostroza/LTL2Action/data/train_formulas.txt", "r") as f:
+with open(f"{DATA_PATH}/train_formulas.txt", "r") as f:
     formulas = f.readlines()
     formulas = [f.strip() for f in formulas]
 
@@ -207,7 +210,7 @@ class Lang2LTLSampler(LTLSampler):
 class Lang2LTLTextSampler(LTLSampler):
     def __init__(self, propositions):
         super().__init__(propositions)
-        with open("/workspace1/cahinostroza/LTL2Action/data/baseline_train.txt", "r") as f:
+        with open(f"{DATA_PATH}/baseline_train.txt", "r") as f:
             data = f.readlines()
             self.data = [d.strip() for d in data]
 
@@ -219,7 +222,7 @@ class TestLang2LTLSampler(LTLSampler):
     def __init__(self, propositions):
         super().__init__(propositions)
         self.count = 0
-        with open("/workspace1/cahinostroza/LTL2Action/data/val_formulas.txt", "r") as f:
+        with open(f"{DATA_PATH}/val_formulas.txt", "r") as f:
             formulas = f.readlines()
             self.formulas = [f.strip() for f in formulas]
 
@@ -237,7 +240,7 @@ class TestLang2LTLTextSampler(LTLSampler):
     def __init__(self, propositions):
         super().__init__(propositions)
         self.count = 0
-        with open("/workspace1/cahinostroza/LTL2Action/data/val_instructions.txt", "r") as f:
+        with open(f"{DATA_PATH}/val_instructions.txt", "r") as f:
             formulas = f.readlines()
             self.formulas = [f.strip() for f in formulas]
 
