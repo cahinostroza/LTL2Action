@@ -1,6 +1,10 @@
-
-src/storage/
-
+*storage*
 spot-2.9/
-
 **/__pycache__
+.venv/
+dgl/
+*.ipynb
+logs
+plots
+project
+scripts

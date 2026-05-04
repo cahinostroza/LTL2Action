@@ -33,14 +33,13 @@ class Eval:
 
         # Load environments for evaluation
         eval_envs = []
-        print(f"Creating {self.num_procs} eval environments with seed {seed}")
         for i in range(self.num_procs):
             eval_envs.append(utils.make_env(env, progression_mode, ltl_sampler, seed, 0, False))
 
         eval_envs[0].reset()
-        if isinstance(eval_envs[0].env.env.env, LetterEnv):
+        if isinstance(eval_envs[0].env, LetterEnv):
             for env in eval_envs:
-                env.env.env.env.map = eval_envs[0].env.env.env.map
+                env.env.map = eval_envs[0].env.map
 
         self.eval_envs = ParallelEnv(eval_envs)
 
@@ -118,8 +117,9 @@ if __name__ == '__main__':
 
     logs_returns_per_episode = []
     logs_num_frames_per_episode = [] 
-
+    print(args.model_paths)
     for model_path in args.model_paths:
+        print("Evaluating:", model_path)
         idx = model_path.find("seed:") + 5
         seed = int(model_path[idx:idx+2].strip("_"))
 

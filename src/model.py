@@ -26,7 +26,7 @@ from policy_network import PolicyNetwork
 # Function from https://github.com/ikostrikov/pytorch-a2c-ppo-acktr/blob/master/model.py
 def init_params(m):
     classname = m.__class__.__name__
-    if classname.find("Linear") != -1:
+    if classname.find("Linear") != -1 and classname.find("TypedLinear") == -1:
         m.weight.data.normal_(0, 1)
         m.weight.data *= 1 / torch.sqrt(m.weight.data.pow(2).sum(1, keepdim=True))
         if m.bias is not None:
@@ -34,7 +34,8 @@ def init_params(m):
 
 
 class ACModel(nn.Module, torch_ac.ACModel):
-    def __init__(self, env, obs_space, action_space, ignoreLTL, gnn_type, dumb_ac, freeze_ltl):
+    def __init__(self, env, obs_space, action_space, ignoreLTL, gnn_type, dumb_ac, freeze_ltl,
+        actor_critic_ponder=1, depth_increase=0):
         super().__init__()
 
         # Decide which components are enabled
@@ -95,16 +96,17 @@ class ACModel(nn.Module, torch_ac.ACModel):
             )
         else:
             # Define actor's model
-            self.actor = PolicyNetwork(self.embedding_size, self.action_space, hiddens=[64, 64, 64], activation=nn.ReLU())
+            self.actor = PolicyNetwork(self.embedding_size, self.action_space,
+                hiddens=[64 * actor_critic_ponder for _ in range(depth_increase + 3)],
+                activation=nn.ReLU())
 
             # Define critic's model
-            self.critic = nn.Sequential(
-                nn.Linear(self.embedding_size, 64),
-                nn.Tanh(),
-                nn.Linear(64, 64),
-                nn.Tanh(),
-                nn.Linear(64, 1)
-            )
+            modules = [nn.Linear(self.embedding_size, 64 * actor_critic_ponder), nn.Tanh()]
+            for _ in range(1 + depth_increase):
+                modules.append(nn.Linear(64 * actor_critic_ponder, 64 * actor_critic_ponder))
+                modules.append(nn.Tanh())
+            modules.append(nn.Linear(64 * actor_critic_ponder, 1))
+            self.critic = nn.Sequential(*modules)
 
         # Initialize parameters correctly
         self.apply(init_params)

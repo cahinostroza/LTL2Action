@@ -27,6 +27,7 @@ class MinigridEnv(gym.Env):
         self.num_episodes = 0
         self.time = 0
         self.timeout = timeout
+        self.seed_number = None
 
     def step(self, action):
         obs, reward, done, _ = self.env.step(action)
@@ -37,7 +38,7 @@ class MinigridEnv(gym.Env):
 
     def seed(self, seed=None):
         random.seed(seed)
-        self.env.seed(seed)
+        self.seed_number = seed
 
     def reset(self):
         """
@@ -45,7 +46,9 @@ class MinigridEnv(gym.Env):
         """
         self.num_episodes += 1
         self.time  = 0
-        return self.env.reset()['image']
+        if self.seed_number is None:
+            raise Exception("Seed must be set before resetting environment.")
+        return self.env.reset(seed = self.seed_number)[0]['image']
 
     def get_events(self):
         return self.env.get_events()

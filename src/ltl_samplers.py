@@ -171,6 +171,18 @@ def getRegisteredSamplers(propositions):
             DefaultSampler(propositions),
             EventuallySampler(propositions)]
 
+class JointSampler:
+    def __init__(self, sampler1, sampler2, probability_sampler1):
+        self.sampler1 = sampler1
+        self.sampler2 = sampler2
+        self.probability_sampler1 = probability_sampler1
+
+    def sample(self):
+        if random.random() < self.probability_sampler1:
+            return self.sampler1.sample()
+        else:
+            return self.sampler2.sample()
+
 # The LTLSampler factory method that instantiates the proper sampler
 # based on the @sampler_id.
 def getLTLSampler(sampler_id, propositions):
@@ -194,6 +206,14 @@ def getLTLSampler(sampler_id, propositions):
         return AdversarialEnvSampler(propositions)
     elif (tokens[0] == "Eventually"):
         return EventuallySampler(propositions, tokens[1], tokens[2], tokens[3], tokens[4])
+    elif (tokens[0] == "Joint"):
+        if len(tokens) > 1:
+            prob = float(tokens[1])
+        else:
+            prob = 0.5
+        avoidance_sampler = UntilTaskSampler(propositions, 1, 3, 1, 2)
+        partially_order_sampler = EventuallySampler(propositions, 1, 5, 1, 4)
+        return JointSampler(avoidance_sampler, partially_order_sampler, prob)
     else: # "Default"
         return DefaultSampler(propositions)
 

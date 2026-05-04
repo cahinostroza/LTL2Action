@@ -116,7 +116,10 @@ parser.add_argument("--int-reward", type=float, default=0.0, help="the intrinsic
 parser.add_argument("--pretrained-gnn", action="store_true", default=False, help="load a pre-trained LTL module.")
 parser.add_argument("--dumb-ac", action="store_true", default=False,help="Use a single-layer actor-critic")
 parser.add_argument("--freeze-ltl", action="store_true", default=False,help="Freeze the gradient updates of the LTL module")
-
+parser.add_argument("--actor-critic-ponder", type=int, default=1,
+                    help="number of hidden units in the actor-critic (default: 1). The number of hidden units in the actor-critic network is multiplied by this factor.")
+parser.add_argument("--depth-increase", type=int, default=0,
+                    help="number of additional linear layers in the actor-critic (default: 0).")
 args = parser.parse_args()
 
 use_mem = args.recurrence > 1
@@ -136,6 +139,10 @@ if args.freeze_ltl:
     gnn_name = gnn_name + "-freeze_ltl"
 if use_mem:
     gnn_name = gnn_name + "-recurrence:%d"%(args.recurrence)
+if args.actor_critic_ponder > 1:
+    gnn_name = gnn_name + "-acponder:%d"%(args.actor_critic_ponder)
+if args.depth_increase > 0:
+    gnn_name = gnn_name + "-depthinc:%d"%(args.depth_increase)
 
 default_model_name = f"{gnn_name}_{args.ltl_sampler}_{args.env}_seed:{args.seed}_epochs:{args.epochs}_bs:{args.batch_size}_fpp:{args.frames_per_proc}_dsc:{args.discount}_lr:{args.lr}_ent:{args.entropy_coef}_clip:{args.clip_eps}_prog:{args.progression_mode}"
 
@@ -186,10 +193,10 @@ for i in range(args.procs):
 
 # Sync environments
 envs[0].reset()
-if isinstance(envs[0].env, LetterEnv):
+if isinstance(envs[0].env.env.env, LetterEnv):
     txt_logger.info("Using fixed maps.")
     for env in envs:
-        env.env.map = envs[0].env.map
+        env.env.env.env.map = envs[0].env.env.env.map
 
 txt_logger.info("Environments loaded\n")
 
@@ -219,7 +226,8 @@ txt_logger.info("Observations preprocessor loaded.\n")
 if use_mem:
     acmodel = RecurrentACModel(envs[0].env, obs_space, envs[0].action_space, args.ignoreLTL, args.gnn, args.dumb_ac, args.freeze_ltl)
 else:
-    acmodel = ACModel(envs[0].env, obs_space, envs[0].action_space, args.ignoreLTL, args.gnn, args.dumb_ac, args.freeze_ltl)
+    acmodel = ACModel(envs[0].env, obs_space, envs[0].action_space, args.ignoreLTL, args.gnn, args.dumb_ac,
+        args.freeze_ltl, args.actor_critic_ponder, args.depth_increase)
 if "model_state" in status:
     acmodel.load_state_dict(status["model_state"])
     txt_logger.info("Loading model from existing run.\n")

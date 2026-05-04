@@ -1,5 +1,4 @@
 from gym_minigrid.minigrid import *
-from gym_minigrid.register import register
 from envs.minigrid.minigrid_extensions import *
 
 from random import randint
@@ -21,6 +20,8 @@ class AdversarialEnv(MiniGridEnv):
         self.event_objs = []
 
         super().__init__(
+            MissionSpace(mission_func=lambda color: f"Reach blue then {color}",
+                ordered_placeholders=[["green", "red"]]),
             grid_size=size,
             max_steps=4*size*size,
             # Set this to True for maximum speed
@@ -94,7 +95,7 @@ class AdversarialEnv(MiniGridEnv):
                 self.door_2.is_open = False
                 self.door_2.is_locked = True
 
-        obs, reward, done, _ = super().step(action)
+        obs, reward, done, _, _ = super().step(action)
 
         # if done and tuple(self.agent_pos) != self.target_pos:
         #       reward = 0

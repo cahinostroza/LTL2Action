@@ -23,7 +23,7 @@ class ASTBuilder(object):
         for i in range(15 - len(terminals)):
             terminals.append("dummy_"+str(i))
 
-        self._enc = OneHotEncoder(handle_unknown='ignore', dtype=np.int)
+        self._enc = OneHotEncoder(handle_unknown='ignore', dtype=int)
         self._enc.fit([['next'], ['until'], ['and'], ['or'], ['eventually'],
             ['always'], ['not']] + np.array(terminals).reshape((-1, 1)).tolist())
 
@@ -39,8 +39,25 @@ class ASTBuilder(object):
         if (library == "networkx"): return nxg
 
         # convert the Networkx graph to dgl graph and pass the 'feat' attribute
-        g = dgl.DGLGraph()
-        g.from_networkx(nxg, node_attrs=["feat", "is_root"], edge_attrs=["type"]) # dgl does not support string attributes (i.e., token)
+        # g = dgl.DGLGraph()
+        # g.from_networkx(nxg, node_attrs=["feat", "is_root"], edge_attrs=["type"]) # dgl does not support string attributes (i.e., token)
+        g = dgl.from_networkx(nxg, node_attrs=["feat", "is_root"], edge_attrs=["type"]) 
+        h = g.ndata['feat']
+        weight = g.ndata['is_root']
+
+        if h.shape[0] != weight.shape[0]:
+            raise ValueError(f"Shape mismatch: h.shape[0] ({h.shape[0]}) != weight.shape[0] ({weight.shape[0]})")
+    
+        # Ensure weight has the same number of dimensions as h
+        if len(weight.shape) == 1:
+            weight = weight.unsqueeze(1)
+        
+        # Expand weight to match the shape of h
+        if weight.shape[1] != h.shape[1]:
+            weight = weight.expand(h.shape[0], h.shape[1])
+        
+        g.ndata['is_root'] = weight
+
         return g
 
     def _one_hot(self, token):
