@@ -1,11 +1,9 @@
 import time
 import torch
 from torch_ac.utils.penv import ParallelEnv
-#import tensorboardX
 
 import utils
 import argparse
-import datetime
 from envs.gym_letters.letter_env import LetterEnv
 
 """
@@ -38,9 +36,9 @@ class Eval:
             eval_envs.append(utils.make_env(env, progression_mode, ltl_sampler, seed, 0, False))
 
         eval_envs[0].reset()
-        if isinstance(eval_envs[0].env.env.env, LetterEnv):
+        if isinstance(eval_envs[0].unwrapped, LetterEnv):
             for env in eval_envs:
-                env.env.env.env.map = eval_envs[0].env.env.env.map
+                env.unwrapped.map = eval_envs[0].unwrapped.map
 
         self.eval_envs = ParallelEnv(eval_envs)
 
