@@ -193,10 +193,10 @@ for i in range(args.procs):
 
 # Sync environments
 envs[0].reset()
-if isinstance(envs[0].env.env.env, LetterEnv):
+if isinstance(envs[0].unwrapped, LetterEnv):
     txt_logger.info("Using fixed maps.")
     for env in envs:
-        env.env.env.env.map = envs[0].env.env.env.map
+        env.unwrapped.map = envs[0].unwrapped.map
 
 txt_logger.info("Environments loaded\n")
 
