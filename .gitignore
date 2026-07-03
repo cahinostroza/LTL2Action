@@ -8,3 +8,4 @@ logs
 plots
 project
 scripts
+*.npy

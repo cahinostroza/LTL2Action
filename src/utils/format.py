@@ -3,8 +3,6 @@ These functions preprocess the observations.
 When trying more sophisticated encoding for LTL, we might have to modify this code.
 """
 
-import os
-import json
 import re
 import torch
 import torch_ac
@@ -13,6 +11,7 @@ import numpy as np
 import utils
 
 from envs import *
+from envs.safety.zones_env import ZonesEnv
 from ltl_wrappers import LTLEnv
 
 def get_obss_preprocessor(env, gnn, progression_mode):
@@ -22,8 +21,7 @@ def get_obss_preprocessor(env, gnn, progression_mode):
 
     if isinstance(env, LTLEnv): #LTLEnv Wrapped env
         env = env.unwrapped
-        # if isinstance(env, LetterEnv) or isinstance(env, MinigridEnv) or isinstance(env, ZonesEnv):
-        if isinstance(env, LetterEnv) or isinstance(env, MinigridEnv):
+        if isinstance(env, LetterEnv) or isinstance(env, MinigridEnv) or isinstance(env, ZonesEnv):
             if progression_mode == "partial":
                 obs_space = {"image": obs_space.spaces["features"].shape, "progress_info": len(vocab_space)}
                 def preprocess_obss(obss, device=None):

@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 
 from envs import *
+from envs.safety.zones_env import ZonesEnv
 from gym.envs.classic_control import PendulumEnv
 
 
@@ -12,8 +13,8 @@ def getEnvModel(env, obs_space):
         return LetterEnvModel(obs_space)
     if isinstance(env, MinigridEnv):
         return MinigridEnvModel(obs_space)
-    # if isinstance(env, ZonesEnv):
-    #     return ZonesEnvModel(obs_space)
+    if isinstance(env, ZonesEnv):
+        return ZonesEnvModel(obs_space)
     if isinstance(env, PendulumEnv):
         return PendulumEnvModel(obs_space)
     # Add your EnvModel here...
