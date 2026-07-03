@@ -75,12 +75,7 @@ def _subsume_or(f1, f2):
 
 
 def progress_and_clean(ltl_formula, truth_assignment):
-    ltl_spot = _get_spot_format(ltl_formula)
-    f = spot.formula(ltl_spot)
-    f = spot.simplify(f)
-    ltl_spot = f.__format__("l")
-    ltl_std,r = _get_std_format(ltl_spot.split(' '))
-    ltl = progress(ltl_std, truth_assignment)
+    ltl = progress(ltl_formula, truth_assignment)
     # I am using spot to simplify the resulting ltl formula
     ltl_spot = _get_spot_format(ltl)
     f = spot.formula(ltl_spot)
@@ -107,25 +102,24 @@ def _get_spot_format(ltl_std):
     return ltl_spot
 
 def _get_std_format(ltl_spot):
+
     s = ltl_spot[0]
     r = ltl_spot[1:]
 
-    if s in ["U","&","|","M"]:
+    if s in ["X","U","&","|"]:
         v1,r1 = _get_std_format(r)
         v2,r2 = _get_std_format(r1)
-        if s == 'M':
-            return ('until', v1, ('and', v1, v2)), r2 
+        if s == "X": op = 'next'
         if s == "U": op = 'until'
         if s == "&": op = 'and'
         if s == "|": op = 'or'
         return (op,v1,v2),r2
 
-    if s in ["F","G","!","X"]:
+    if s in ["F","G","!"]:
         v1,r1 = _get_std_format(r)
         if s == "F": op = 'eventually'
         if s == "G": op = 'always'
         if s == "!": op = 'not'
-        if s == "X": op = 'next'
         return (op,v1),r1
 
     if s == "f":
@@ -158,8 +152,7 @@ def progress(ltl_formula, truth_assignment):
         elif result == 'False':
             return 'True'
         else:
-            # return ('not', result)
-            raise NotImplementedError("The following formula doesn't follow the cosafe syntactic restriction: " + str(ltl_formula) + " - TA: " + str(truth_assignment))
+            raise NotImplementedError("The following formula doesn't follow the cosafe syntactic restriction: " + str(ltl_formula))
 
     if ltl_formula[0] == 'and':
         res1 = progress(ltl_formula[1], truth_assignment)
@@ -224,13 +217,7 @@ if __name__ == '__main__':
     #ltl = ('and',('eventually','a'),('eventually',('and','b',('eventually','c'))))
     #ltl = ('until',('not','a'),('and', 'b', ('eventually','d')))
     ltl = ('until',('not','a'),('and', 'b', ('until',('not','c'),'d')))
-    ltl = ('always', ('or', ('and', 'a', ('next', 'h')), ('and', ('not', 'a'), ('next', ('not', 'h')))))
-    # print(ltl)
-    # ltl = _get_spot_format(ltl)
-    # f = spot.formula(ltl)
-    # f = spot.simplify(f)
-    # ltl = f.__format__("l")
-    # ltl,r = _get_std_format(ltl.split(' '))
+
     while True:
         print(ltl)
         props = input()

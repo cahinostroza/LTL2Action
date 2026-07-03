@@ -3,19 +3,17 @@ These functions preprocess the observations.
 When trying more sophisticated encoding for LTL, we might have to modify this code.
 """
 
+import os
+import json
 import re
 import torch
 import torch_ac
 import gym
 import numpy as np
 import utils
-from transformers import AutoTokenizer
 
 from envs import *
 from ltl_wrappers import LTLEnv
-
-def _t5_preprocess_texts(texts, tokenizer, device=None):
-    return tokenizer(texts, return_tensors="pt", padding=True).input_ids.to(device)
 
 def get_obss_preprocessor(env, gnn, progression_mode):
     obs_space = env.observation_space
@@ -32,16 +30,7 @@ def get_obss_preprocessor(env, gnn, progression_mode):
                         "image": preprocess_images([obs["features"] for obs in obss], device=device),
                         "progress_info":  torch.stack([torch.tensor(obs["progress_info"], dtype=torch.float) for obs in obss], dim=0).to(device)
                     })
-                
-            elif progression_mode == "none":
-                tokenizer = AutoTokenizer.from_pretrained("t5-small")
-                obs_space = {"image": obs_space.spaces["features"].shape, "text": 512} # T5 hidden size
 
-                def preprocess_obss(obss, device=None):
-                    return torch_ac.DictList({
-                        "image": preprocess_images([obs["features"] for obs in obss], device=device),
-                        "text":  _t5_preprocess_texts([obs["text"] for obs in obss], tokenizer, device=device)
-                    })
             else:
                 obs_space = {"image": obs_space.spaces["features"].shape, "text": max(22, len(vocab_space) + 10)}
                 vocab_space = {"max_size": obs_space["text"], "tokens": vocab_space}
@@ -131,11 +120,6 @@ def preprocess4gnn(texts, ast, device=None):
     """
     This function receives the LTL formulas and convert them into inputs for a GNN
     """
-    for text in texts:
-        try:
-            ast(text)
-        except:
-            print("Invalid LTL formula: " + text)
     return np.array([[ast(text).to(device)] for text in texts])
 
 

@@ -3,44 +3,8 @@ import torch
 import utils
 from model import ACModel
 from recurrent_model import RecurrentACModel
-from abc import ABC, abstractmethod
 
-class IAgent(ABC):
-    @abstractmethod
-    def get_actions(self, obss):
-        pass
-
-    @abstractmethod
-    def get_action(self, obs):
-        pass
-
-    @abstractmethod
-    def analyze_feedbacks(self, rewards, dones):
-        pass
-
-    @abstractmethod
-    def analyze_feedback(self, reward, done):
-        pass
-
-class RandomAgent(IAgent):
-    def __init__(self, env, obs_space, action_space, model_dir, ignoreLTL, progression_mode,
-                gnn, recurrence = 1, dumb_ac = False, device=None, argmax=False, num_envs=1):
-        self.action_space = action_space
-
-    def get_actions(self, obss):
-        print("RandomAgent")
-        return [self.action_space.sample() for _ in obss]
-
-    def get_action(self, obs):
-        return self.action_space.sample()
-
-    def analyze_feedbacks(self, rewards, dones):
-        pass
-
-    def analyze_feedback(self, reward, done):
-        pass
-
-class Agent(IAgent):
+class Agent:
     """An agent.
 
     It is able:

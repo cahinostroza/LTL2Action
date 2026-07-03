@@ -173,8 +173,8 @@ txt_logger.info("{}\n".format(args))
 utils.seed(args.seed)
 
 # Set device
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# device = torch.device("cpu")
 txt_logger.info(f"Device: {device}\n")
 
 # Load environments

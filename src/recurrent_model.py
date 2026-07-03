@@ -22,7 +22,7 @@ from gnns.graphs.GNN import GNNMaker
 
 from env_model import getEnvModel
 from policy_network import PolicyNetwork
-from model import LSTMModel, GRUModel, init_params, T5Model
+from model import LSTMModel, GRUModel, init_params
 
 
 
@@ -32,7 +32,7 @@ class RecurrentACModel(nn.Module, torch_ac.RecurrentACModel):
 
         # Decide which components are enabled
         self.use_progression_info = "progress_info" in obs_space
-        self.use_text = not ignoreLTL and (gnn_type == "GRU" or gnn_type == "LSTM" or gnn_type == "T5") and "text" in obs_space
+        self.use_text = not ignoreLTL and (gnn_type == "GRU" or gnn_type == "LSTM") and "text" in obs_space
         self.use_ast = not ignoreLTL and ("GCN" in gnn_type) and "text" in obs_space
         self.gnn_type = gnn_type
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -61,8 +61,6 @@ class RecurrentACModel(nn.Module, torch_ac.RecurrentACModel):
             self.text_embedding_size = 32
             if self.gnn_type == "GRU":
                 self.text_rnn = GRUModel(obs_space["text"], self.word_embedding_size, 16, self.text_embedding_size).to(self.device)
-            elif self.gnn_type == "T5":
-                self.text_rnn = T5Model(self.text_embedding_size).to(self.device)
             else:
                 assert(self.gnn_type == "LSTM")
                 self.text_rnn = LSTMModel(obs_space["text"], self.word_embedding_size, 16, self.text_embedding_size).to(self.device)

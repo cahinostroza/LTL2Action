@@ -22,12 +22,11 @@ from gnns.graphs.GNN import GNNMaker
 
 from env_model import getEnvModel
 from policy_network import PolicyNetwork
-from transformers import T5ForConditionalGeneration
 
 # Function from https://github.com/ikostrikov/pytorch-a2c-ppo-acktr/blob/master/model.py
 def init_params(m):
     classname = m.__class__.__name__
-    if classname == 'Linear':
+    if classname.find("Linear") != -1:
         m.weight.data.normal_(0, 1)
         m.weight.data *= 1 / torch.sqrt(m.weight.data.pow(2).sum(1, keepdim=True))
         if m.bias is not None:
@@ -40,7 +39,7 @@ class ACModel(nn.Module, torch_ac.ACModel):
 
         # Decide which components are enabled
         self.use_progression_info = "progress_info" in obs_space
-        self.use_text = not ignoreLTL and (gnn_type == "GRU" or gnn_type == "LSTM" or gnn_type == "T5") and "text" in obs_space
+        self.use_text = not ignoreLTL and (gnn_type == "GRU" or gnn_type == "LSTM") and "text" in obs_space
         self.use_ast = not ignoreLTL and ("GCN" in gnn_type) and "text" in obs_space
         self.gnn_type = gnn_type
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -69,8 +68,6 @@ class ACModel(nn.Module, torch_ac.ACModel):
             self.text_embedding_size = 32
             if self.gnn_type == "GRU":
                 self.text_rnn = GRUModel(obs_space["text"], self.word_embedding_size, 16, self.text_embedding_size).to(self.device)
-            elif self.gnn_type == "T5":
-                self.text_rnn = T5Model(self.text_embedding_size).to(self.device)
             else:
                 assert(self.gnn_type == "LSTM")
                 self.text_rnn = LSTMModel(obs_space["text"], self.word_embedding_size, 16, self.text_embedding_size).to(self.device)
@@ -179,17 +176,5 @@ class GRUModel(nn.Module):
         hidden, _ = self.gru(self.word_embedding(text))
         return self.output_layer(hidden[:, -1, :])
 
-class T5Model(nn.Module):
-    def __init__(self, text_embedding_size):
-        super().__init__()
-        self.t5 =  T5ForConditionalGeneration.from_pretrained('t5-small').encoder
-        self.output_layer = nn.Linear(512, text_embedding_size)
-        print(self.t5)
-
-    def forward(self, text):
-        outputs = self.t5(text)
-        outputs = outputs.last_hidden_state[:, -1, :]
-        outputs = self.output_layer(outputs)
-        return outputs
 
 

@@ -69,7 +69,7 @@ class LTLEnv(gym.Wrapper):
         self.obs = self.env.reset()
 
         # Defining an LTL goal
-        self.ltl_goal, self.real_ltl_goal     = self.sample_ltl_goal()
+        self.ltl_goal     = self.sample_ltl_goal()
         self.ltl_original = self.ltl_goal
 
         # Adding the ltl goal to the observation
@@ -87,27 +87,20 @@ class LTLEnv(gym.Wrapper):
 
         # progressing the ltl formula
         truth_assignment = self.get_events(self.obs, action, next_obs)
-        if self.progression_mode != "none":
-            self.ltl_goal = self.progression(self.ltl_goal, truth_assignment)
+        self.ltl_goal = self.progression(self.ltl_goal, truth_assignment)
         self.obs      = next_obs
-        self.real_ltl_goal = self.progression(self.real_ltl_goal, truth_assignment)
 
         # Computing the LTL reward and done signal
         ltl_reward = 0.0
-        real_ltl_done   = False
-        if self.real_ltl_goal == 'True':
+        ltl_done   = False
+        if self.ltl_goal == 'True':
             ltl_reward = 1.0
-            real_ltl_done   = True
-        elif self.real_ltl_goal == 'False':
+            ltl_done   = True
+        elif self.ltl_goal == 'False':
             ltl_reward = -1.0
-            real_ltl_done   = True
+            ltl_done   = True
         else:
             ltl_reward = int_reward
-
-        if self.ltl_goal in ['True', 'False']:
-            if ltl_reward != 1.0:
-                ltl_reward = -1.0
-                real_ltl_done = True
 
         # Computing the new observation and returning the outcome of this action
         if self.progression_mode == "full":
@@ -120,7 +113,7 @@ class LTLEnv(gym.Wrapper):
             raise NotImplementedError
 
         reward  = original_reward + ltl_reward
-        done    = env_done or real_ltl_done
+        done    = env_done or ltl_done
         return ltl_obs, reward, done, info
 
     def progression(self, ltl_formula, truth_assignment):
@@ -148,7 +141,7 @@ class LTLEnv(gym.Wrapper):
     def sample_ltl_goal(self):
         # NOTE: The propositions must be represented by a char
         # This function must return an LTL formula for the task
-        llm_formula, formula = self.sampler.sample()
+        formula = self.sampler.sample()
 
         if isinstance(self.sampler, SequenceSampler):
             def flatten(bla):
@@ -160,7 +153,7 @@ class LTLEnv(gym.Wrapper):
             length = flatten(formula).count("and") + 1
             self.env.timeout = 25 # 10 * length
 
-        return llm_formula, formula
+        return formula
 
 
     def get_events(self, obs, act, next_obs):

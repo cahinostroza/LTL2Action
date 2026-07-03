@@ -7,7 +7,6 @@ given template(s).
 """
 
 import random
-from spot import formula
 
 class LTLSampler():
     def __init__(self, propositions):
@@ -165,90 +164,6 @@ class AdversarialEnvSampler(LTLSampler):
             return ('eventually', ('and', 'a', ('eventually', 'b')))
         else:
             return ('eventually', ('and', 'a', ('eventually', 'c')))
-        
-with open("/workspace1/cahinostroza/LTL2Action/data/train_formulas.txt", "r") as f:
-    formulas = f.readlines()
-    formulas = [f.strip() for f in formulas]
-
-def transform(f):
-    if f.kind() == 23:
-        return ('and', transform(f[0]), transform(f[1]))
-    elif f.kind() == 6:
-        return ('eventually', transform(f[0]))
-    elif f.kind() == 3:
-        return str(f)
-    elif f.kind() == 14:
-        return ('until', transform(f[0]), transform(f[1]))
-    elif f.kind() == 4:
-        return ('not', transform(f[0]))
-    elif f.kind() == 17:
-        o1 = transform(f[0])
-        o2 = transform(f[1])
-        return ('until', o1, ('and', o1, o2))
-    elif f.kind() == 21:
-        return ('or', transform(f[0]), transform(f[1]))
-    elif f.kind() == 7:
-        return ('always', transform(f[0]))
-    elif f.kind() == 12:
-        return ('or', ('not', transform(f[0])), transform(f[1]))
-    elif f.kind() == 5:
-        return ('next', transform(f[0]))
-    elif f.kind() == 13:
-        op1 = transform(f[0])
-        op2 = transform(f[1])
-        return ('and', ('or', ('not', op1), op2), ('or', ('not', op2), op1))
-    else:
-        raise Exception(f'Not implemented for {f.kind()}')
-        
-class Lang2LTLSampler(LTLSampler):
-    def sample(self):
-        return transform(formula(random.choice(formulas)))
-    
-class Lang2LTLTextSampler(LTLSampler):
-    def __init__(self, propositions):
-        super().__init__(propositions)
-        with open("/workspace1/cahinostroza/LTL2Action/data/baseline_train.txt", "r") as f:
-            data = f.readlines()
-            self.data = [d.strip() for d in data]
-
-    def sample(self):
-        d = random.choice(self.data)
-        return d.split(" - ")
-        
-class TestLang2LTLSampler(LTLSampler):
-    def __init__(self, propositions):
-        super().__init__(propositions)
-        self.count = 0
-        with open("/workspace1/cahinostroza/LTL2Action/data/val_formulas.txt", "r") as f:
-            formulas = f.readlines()
-            self.formulas = [f.strip() for f in formulas]
-
-    def sample(self):
-        print(self.count, len(self.formulas))
-        f, real_f = self.formulas[self.count].split(" - ")
-        f = transform(formula(f))
-        real_f = transform(formula(real_f))
-        self.count += 1
-        if self.count >= len(self.formulas):
-            self.count = 0
-        return f, real_f
-    
-class TestLang2LTLTextSampler(LTLSampler):
-    def __init__(self, propositions):
-        super().__init__(propositions)
-        self.count = 0
-        with open("/workspace1/cahinostroza/LTL2Action/data/val_instructions.txt", "r") as f:
-            formulas = f.readlines()
-            self.formulas = [f.strip() for f in formulas]
-
-    def sample(self):
-        print(self.count, len(self.formulas))
-        f, real_f = self.formulas[self.count].split(" - ")
-        real_f = transform(formula(real_f))
-        self.count += 1
-        if self.count >= len(self.formulas):
-            self.count = 0
-        return f, real_f
 
 def getRegisteredSamplers(propositions):
     return [SequenceSampler(propositions),
@@ -279,14 +194,6 @@ def getLTLSampler(sampler_id, propositions):
         return AdversarialEnvSampler(propositions)
     elif (tokens[0] == "Eventually"):
         return EventuallySampler(propositions, tokens[1], tokens[2], tokens[3], tokens[4])
-    elif (tokens[0] == "Lang2LTL"):
-        return Lang2LTLSampler(propositions)
-    elif (tokens[0] == "TestLang2LTL"):
-        return TestLang2LTLSampler(propositions)
-    elif (tokens[0] == "Lang2LTLText"):
-        return Lang2LTLTextSampler(propositions)
-    elif (tokens[0] == "TestLang2LTLText"):
-        return TestLang2LTLTextSampler(propositions)
     else: # "Default"
         return DefaultSampler(propositions)
 
